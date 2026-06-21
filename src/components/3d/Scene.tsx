@@ -12,7 +12,6 @@ import PortYard from './PortYard';
 import HeatmapLayer from './HeatmapLayer';
 import PortCranes from './PortCranes';
 import Ship from './Ships';
-import AtmosphericDust from './AtmosphericDust';
 import AGVTrucks from './AGVTrucks';
 import PortRoads from './PortRoads'; 
 import PortWater from './PortWater'; 
@@ -251,17 +250,11 @@ function CameraFocusHandler({ selectedContainer, controlsRef }: { selectedContai
   return null;
 }
 
-// =========================================================================
-// 🔒 SAFE POST-PROCESSING LAYER (ANTI-ALPHA CRASH ENGINE)
-// =========================================================================
 function PostProcessingEffects({ isNightMode }: { isNightMode: boolean }) {
   const gl = useThree((state) => state.gl);
-  
-  // 🚀 [THE ALPHA SAFEGUARD] WebGL Context එක පණ ඇතුව තියෙනවාද කියලා 100%ක් ෂුවර් කරගන්නවා
   if (!gl || !gl.getContext()) return null;
 
   return (
-    // 🚀 [DYNAMIC KEY] හොට්-රීලෝඩ් වලදී පරණ ස්ටේල් වෙච්ච ඉන්ස්ටන්ස් එක සම්පූර්ණයෙන්ම ක්ලීන් කරලා අලුතින්ම හදනවා මචන්
     <EffectComposer key={isNightMode ? 'night-pass' : 'day-pass'} disableNormalPass>
       <Bloom 
         luminanceThreshold={1.3} 
@@ -338,8 +331,6 @@ export default function Scene({ isNightMode, searchQuery, onSelectContainer, sel
           <AGVTrucks onSelectTruck={onSelectContainer} />
           
           <Ship id="vessel-alpha" initialPosition={[-110, 0, 15]} />
-          
-          {isNightMode && <group><AtmosphericDust /></group>}
 
           <PostProcessingEffects isNightMode={isNightMode} />
 
