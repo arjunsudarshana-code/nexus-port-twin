@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚢 Nexus Port Twin — Interactive 3D Digital Twin Engine
 
-## Getting Started
+An enterprise-grade, high-performance **3D Digital Twin web application** designed to simulate real-time port operations, fleet logistics, and container yard analytics. Built using a cutting-edge modern web stack featuring **Next.js**, **React Three Fiber (R3F)**, and **Three.js**.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Key Features & Architectural Highlights
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 1. Ultra-Optimized 60 FPS Night Mode Engine
+* **Performance-First Lighting:** Engineered with specialized real-time shadow-mapping optimizations. Support spotlights selectively utilize shadow casting to alleviate heavy GPU overhead, ensuring buttery-smooth 60 FPS navigation on standard modern hardware.
+* **Cinematic Atmospheric Effects:** Dynamically handles transitions between a vibrant cyber-blue daytime sky and a rich, deep-space night canopy populated with a multi-layered star field and bloom-enhanced lunar body.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Physics-Based Real-Time Particle Simulation
+* **Wind-Drift Exhaust Fluidity:** Implements an advanced R3F instance mesh engine that locks smoke plumes perfectly to the vessel's chimney exhaust rim. Particles automatically simulate dynamic scaling, dissolution, and realistic aerodynamic backward drift relative to ship velocity vectors.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. One-Time Cinematic Vessel Arrival
+* **State-Guarded Introductions:** Utilizes bulletproof state guards (`useRef` lifecycle protection) to execute a sweeping, smooth cinematic arrival animation when the application first mounts. This sequence is strictly locked to run only once per session, remaining unaffected by subsequent dashboard UI state re-renders (e.g., toggling Night Mode or Heatmaps).
 
-## Learn More
+### 4. Interactive Live Telemetry HUD
+* **Glassmorphism 2D Interface Layer:** Features an overlay HUD delivering contextual live stream metrics, active vehicle telemetry data logging, a comprehensive container locator search system, and real-time fleet bandwidth tracking.
+* **Yard Capacity Heatmap:** Implements a dynamic layout rendering overlay allowing terminal operators to switch on visual density diagnostic matrices instantly.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠️ Technology Stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+* **Framework:** Next.js (App Router Architecture)
+* **3D Core Layer:** React Three Fiber (R3F) & Three.js
+* **Asset/Camera Controllers:** `@react-three/drei` (OrbitControls, Cloud Canopy, Instanced Stars)
+* **Animation Engine:** GSAP (GreenSock Animation Platform)
+* **Post-Processing Filters:** `@react-three/postprocessing` (Selective Neon/Lunar Bloom Effects)
+* **Styling Framework:** Tailwind CSS & Lucide Icons
