@@ -9,7 +9,7 @@ interface PortYardProps {
   searchQuery: string;
   onSelectContainer: (container: any) => void; 
   selectedContainer: any; 
-  isHeatmapMode: boolean; // 🚀 Prop එක එකතු කළා මචන්
+  isHeatmapMode: boolean; 
 }
 
 export default function PortYard({ searchQuery, onSelectContainer, selectedContainer, isHeatmapMode }: PortYardProps) {
@@ -29,7 +29,6 @@ export default function PortYard({ searchQuery, onSelectContainer, selectedConta
     let index = 0;
     const tempMap: any[] = [];
 
-    // සාමාන්‍ය වර්ණ තේමාව
     const containerColors = [
       new THREE.Color('#0f172a'), 
       new THREE.Color('#1e293b'), 
@@ -78,22 +77,17 @@ export default function PortYard({ searchQuery, onSelectContainer, selectedConta
           const colorIdx = (x * 7 + z * 13 + y * 3) % containerColors.length;
           let finalColor = containerColors[colorIdx];
 
-          // =========================================================================
-          // 🔥 🎛️ [NEW HEATMAP LOGIC LAYER] 🎛️ 🔥
-          // =========================================================================
           if (isHeatmapMode) {
-            // කන්ටේනර් තට්ටුවේ උස (Stack Height) අනුව වර්ණ ගැන්වීම
             if (stackHeight >= 5) {
-              finalColor = new THREE.Color('#ef4444').multiplyScalar(1.5); // 🔴 CRITICAL CONGESTION (තට්ටු 5 - දීප්තිමත් රතු)
+              finalColor = new THREE.Color('#ef4444').multiplyScalar(1.5); 
             } else if (stackHeight === 4) {
-              finalColor = new THREE.Color('#f97316'); // 🟠 HIGH DENSITY (තට්ටු 4 - තැඹිලි)
+              finalColor = new THREE.Color('#f97316'); 
             } else if (stackHeight === 3) {
-              finalColor = new THREE.Color('#eab308'); // 🟡 WARNING BUFFER (තට්ටු 3 - කහ)
+              finalColor = new THREE.Color('#eab308'); 
             } else {
-              finalColor = new THREE.Color('#06b6d4').multiplyScalar(0.4); // 🔵 OPTIMAL OPEN SPACE (තට්ටු 1-2 - නිල්/කොළ)
+              finalColor = new THREE.Color('#06b6d4').multiplyScalar(0.4); 
             }
           } else {
-            // සාමාන්‍ය තේමා වර්ණ සහ සිලෙක්ෂන්/සර්ච් කලර්ස්
             const isSelected = selectedContainer && containerId === selectedContainer.id;
             if (isSelected) {
               finalColor = new THREE.Color('#ff0055'); 
@@ -129,7 +123,7 @@ export default function PortYard({ searchQuery, onSelectContainer, selectedConta
     if (meshRef.current.instanceColor) {
       meshRef.current.instanceColor.needsUpdate = true;
     }
-  }, [searchQuery, selectedContainer, isHeatmapMode]); // 🚀 isHeatmapMode එක Dependency එකට එකතු කළා මචන්!
+  }, [searchQuery, selectedContainer, isHeatmapMode]); 
 
   return (
     <instancedMesh 
@@ -137,6 +131,8 @@ export default function PortYard({ searchQuery, onSelectContainer, selectedConta
       args={[boxGeometry, textMaterial, CONTAINER_COUNT]} 
       castShadow 
       receiveShadow
+      // 🚀 [PERFORMANCE MATRIX FIX] Static mesh එකක් නිසා අනවශ්‍ය පර්ෆ්‍රේම් ලූප්ස් නැවැත්තුවා මචන්!
+      matrixAutoUpdate={false}
       onClick={(e) => {
         e.stopPropagation(); 
         if (e.instanceId !== undefined && containerDataMapRef.current[e.instanceId]) {

@@ -38,9 +38,6 @@ function IntroCamera() {
   return null;
 }
 
-// =========================================================================
-// ☀️ 🌙 DYNAMIC REAL SKY, MOON & LIGHTING CONTROLLER
-// =========================================================================
 function DayNightLighting({ isNight }: { isNight: boolean }) {
   const dirLightRef = useRef<THREE.DirectionalLight>(null);
   const ambientLightRef = useRef<THREE.AmbientLight>(null);
@@ -139,10 +136,7 @@ function DayNightLighting({ isNight }: { isNight: boolean }) {
     <>
       {isNight ? (
         <>
-          {/* 🚀 GPU performance sathi stars count 3500 var laavla ahe */}
           <Stars radius={280} depth={50} count={3500} factor={5} saturation={0.7} fade speed={1.5} />
-          
-          {/* 🚀 Moon position tumhi dilya pramanech unchanged ahe bhau */}
           <mesh ref={moonRef} position={[750, -500, -200]}>
             <sphereGeometry args={[28, 28, 28]} />
             <meshBasicMaterial color="#fffbeb" toneMapped={false} />
@@ -161,7 +155,6 @@ function DayNightLighting({ isNight }: { isNight: boolean }) {
       <hemisphereLight ref={hemiLightRef} intensity={0.6} args={[0xffffff, 0x0284c7]} />
       <directionalLight ref={dirLightRef} intensity={1.5} castShadow shadow-mapSize-width={2048} shadow-mapSize-height={2048} shadow-bias={-0.0001} />
 
-      {/* REAL-TIME HIGH-DENSITY CLOUD CANOPY */}
       {!isNight && (
         <group>
           {cloudCanopy.map((c, idx) => (
@@ -184,7 +177,6 @@ function DayNightLighting({ isNight }: { isNight: boolean }) {
 
       {isNight && (
         <group>
-          {/* 🚀 Lag ghalvanyasathi fakt madhlya spotlight var castShadow suru thevla ahe */}
           <spotLight position={[-60, 60, 40]} angle={0.8} penumbra={0.8} intensity={15000} distance={300} color="#00f5d4" />
           <spotLight position={[0, 70, 30]} angle={0.9} penumbra={0.7} intensity={22000} distance={300} color="#ffffff" castShadow shadow-bias={-0.0008} shadow-mapSize={[1024, 1024]} />
           <spotLight position={[60, 60, 40]} angle={0.8} penumbra={0.8} intensity={15000} distance={300} color="#00f5d4" />
@@ -208,23 +200,30 @@ function CameraFocusHandler({ selectedContainer, controlsRef }: { selectedContai
       return; 
     }
 
+    if (controlsRef.current) controlsRef.current.enabled = false;
+    gsap.killTweensOf(camera.position);
+    if (controlsRef.current) gsap.killTweensOf(controlsRef.current.target);
+
     if (selectedContainer && selectedContainer.position) {
       const [cx, cy, cz] = selectedContainer.position;
+      
       gsap.to(camera.position, {
-        x: cx + 25,
-        y: cy + 18,
-        z: cz + 25,
-        duration: 1.8,
-        ease: 'power2.out',
+        x: cx + 20,
+        y: cy + 14,
+        z: cz + 20,
+        duration: 1.2, 
+        ease: 'power3.out',
       });
+
       if (controlsRef.current) {
         gsap.to(controlsRef.current.target, {
           x: cx,
           y: cy,
           z: cz,
-          duration: 1.8,
-          ease: 'power2.out',
-          onUpdate: () => controlsRef.current.update()
+          duration: 1.2,
+          ease: 'power3.out',
+          onUpdate: () => controlsRef.current.update(),
+          onComplete: () => { if (controlsRef.current) controlsRef.current.enabled = true; }
         });
       }
     } else {
@@ -232,17 +231,18 @@ function CameraFocusHandler({ selectedContainer, controlsRef }: { selectedContai
         x: 90,
         y: 55,
         z: 90,
-        duration: 1.5,
-        ease: 'power2.inOut',
+        duration: 1.2,
+        ease: 'power3.inOut',
       });
       if (controlsRef.current) {
         gsap.to(controlsRef.current.target, {
           x: 0,
           y: 0,
           z: 0,
-          duration: 1.5,
-          ease: 'power2.inOut',
-          onUpdate: () => controlsRef.current.update()
+          duration: 1.2,
+          ease: 'power3.inOut',
+          onUpdate: () => controlsRef.current.update(),
+          onComplete: () => { if (controlsRef.current) controlsRef.current.enabled = true; }
         });
       }
     }
@@ -251,12 +251,18 @@ function CameraFocusHandler({ selectedContainer, controlsRef }: { selectedContai
   return null;
 }
 
+// =========================================================================
+// 🔒 SAFE POST-PROCESSING LAYER (ANTI-ALPHA CRASH ENGINE)
+// =========================================================================
 function PostProcessingEffects({ isNightMode }: { isNightMode: boolean }) {
   const gl = useThree((state) => state.gl);
-  if (!gl) return null;
+  
+  // 🚀 [THE ALPHA SAFEGUARD] WebGL Context එක පණ ඇතුව තියෙනවාද කියලා 100%ක් ෂුවර් කරගන්නවා
+  if (!gl || !gl.getContext()) return null;
 
   return (
-    <EffectComposer disableNormalPass>
+    // 🚀 [DYNAMIC KEY] හොට්-රීලෝඩ් වලදී පරණ ස්ටේල් වෙච්ච ඉන්ස්ටන්ස් එක සම්පූර්ණයෙන්ම ක්ලීන් කරලා අලුතින්ම හදනවා මචන්
+    <EffectComposer key={isNightMode ? 'night-pass' : 'day-pass'} disableNormalPass>
       <Bloom 
         luminanceThreshold={1.3} 
         mipmapBlur 
@@ -294,7 +300,7 @@ export default function Scene({ isNightMode, searchQuery, onSelectContainer, sel
   }, [isNightMode]);
 
   return (
-    <div className="w-full h-screen bg-slate-950 relative">
+    <div className="w-full h-[100dvh] bg-slate-950 relative">
       <Canvas
         camera={{ position: [90, 55, 90], fov: 45 }}
         shadows
