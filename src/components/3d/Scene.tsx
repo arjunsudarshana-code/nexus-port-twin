@@ -2,10 +2,10 @@
 
 import { Suspense, useRef, useEffect, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Cloud, Stars } from '@react-three/drei';
+import { OrbitControls, Cloud, Stars, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 import gsap from 'gsap';
-import { EffectComposer, Bloom } from '@react-three/postprocessing'; 
+import { EffectComposer, Bloom, SMAA, Vignette } from '@react-three/postprocessing'; 
 
 import Ocean from './Ocean';
 import PortYard from './PortYard'; 
@@ -131,62 +131,7 @@ function DayNightLighting({ isNight }: { isNight: boolean }) {
     }
   });
 
-  return (
-    <>
-      {isNight ? (
-        <>
-          <Stars radius={280} depth={50} count={3500} factor={5} saturation={0.7} fade speed={1.5} />
-          <mesh ref={moonRef} position={[750, -500, -200]}>
-            <sphereGeometry args={[28, 28, 28]} />
-            <meshBasicMaterial color="#fffbeb" toneMapped={false} />
-          </mesh>
-        </>
-      ) : (
-        <>
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <sphereGeometry args={[900, 32, 32]} />
-            <meshBasicMaterial color="#0ea5e9" side={THREE.BackSide} toneMapped={true} />
-          </mesh>
-        </>
-      )}
-
-      <ambientLight ref={ambientLightRef} intensity={0.6} />
-      <hemisphereLight ref={hemiLightRef} intensity={0.6} args={[0xffffff, 0x0284c7]} />
-      <directionalLight ref={dirLightRef} intensity={1.5} castShadow shadow-mapSize-width={2048} shadow-mapSize-height={2048} shadow-bias={-0.0001} />
-
-      {!isNight && (
-        <group>
-          {cloudCanopy.map((c, idx) => (
-            <Cloud 
-              key={idx}
-              position={c.pos as [number, number, number]} 
-              bounds={c.size as [number, number, number]}
-              volume={c.vol}
-              segments={c.seg}
-              speed={c.speed}
-              growth={c.grow}
-              opacity={0.85}
-              smallestVolume={3}
-              concentrate="inside"
-              color="#ffffff"
-            />
-          ))}
-        </group>
-      )}
-
-      {isNight && (
-        <group>
-          <spotLight position={[-60, 60, 40]} angle={0.8} penumbra={0.8} intensity={15000} distance={300} color="#00f5d4" />
-          <spotLight position={[0, 70, 30]} angle={0.9} penumbra={0.7} intensity={22000} distance={300} color="#ffffff" castShadow shadow-bias={-0.0008} shadow-mapSize={[1024, 1024]} />
-          <spotLight position={[60, 60, 40]} angle={0.8} penumbra={0.8} intensity={15000} distance={300} color="#00f5d4" />
-          
-          <pointLight position={[-80, 6, 30]} intensity={600} distance={50} color="#ff0000" />
-          <pointLight position={[0, 6, 30]} intensity={600} distance={50} color="#00ff66" />
-          <pointLight position={[80, 6, 30]} intensity={600} distance={50} color="#ff0000" />
-        </group>
-      )}
-    </>
-  );
+  return null;
 }
 
 function CameraFocusHandler({ selectedContainer, controlsRef }: { selectedContainer: any; controlsRef: any }) {
@@ -257,11 +202,13 @@ function PostProcessingEffects({ isNightMode }: { isNightMode: boolean }) {
   return (
     <EffectComposer key={isNightMode ? 'night-pass' : 'day-pass'} disableNormalPass>
       <Bloom 
-        luminanceThreshold={1.3} 
+        luminanceThreshold={1.4} 
         mipmapBlur 
-        luminanceSmoothing={0.9} 
-        intensity={isNightMode ? 1.8 : 0.4} 
+        luminanceSmoothing={0.95} 
+        intensity={isNightMode ? 1.6 : 0.4} 
       />
+      <SMAA />
+      <Vignette eskil={false} offset={0.35} darkness={0.6} />
     </EffectComposer>
   );
 }
@@ -285,11 +232,6 @@ export default function Scene({ isNightMode, searchQuery, onSelectContainer, sel
   
   useEffect(() => {
     window.tooglePortLights = isNightMode;
-    if (isNightMode) {
-      window.dispatchEvent(new Event('port-night-mode'));
-    } else {
-      window.dispatchEvent(new Event('port-day-mode'));
-    }
   }, [isNightMode]);
 
   return (
@@ -297,7 +239,15 @@ export default function Scene({ isNightMode, searchQuery, onSelectContainer, sel
       <Canvas
         camera={{ position: [90, 55, 90], fov: 45 }}
         shadows
-        gl={{ antialias: true, powerPreference: 'high-performance' }}
+        gl={{ 
+          antialias: true, 
+          powerPreference: 'high-performance',
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.2 
+        }}
+        onCreated={({ gl }) => {
+          gl.shadowMap.radius = 4; 
+        }}
       >
         <color attach="background" args={[isNightMode ? '#020617' : '#0ea5e9']} />
         <fogExp2 attach="fog" args={[isNightMode ? '#020617' : '#0ea5e9', 0.0001]} />
@@ -306,12 +256,19 @@ export default function Scene({ isNightMode, searchQuery, onSelectContainer, sel
           <IntroCamera />
           <CameraFocusHandler selectedContainer={selectedContainer} controlsRef={controlsRef} />
           
+          <Environment preset={isNightMode ? 'night' : 'city'} />
+
           <DayNightLighting isNight={isNightMode} />
           <Ocean />
           
           <mesh position={[0, -4.5, 0]} receiveShadow>
             <boxGeometry args={[160, 10, 500]} />
             <meshStandardMaterial color={isNightMode ? '#556173' : '#78889e'} roughness={0.7} metalness={0.1} />
+          </mesh>
+
+          <mesh position={[115, -4.4, 0]} receiveShadow>
+            <boxGeometry args={[70, 10, 500]} />
+            <meshStandardMaterial color="#1e293b" roughness={0.85} metalness={0.15} />
           </mesh>
 
           <PortRoads isNightMode={isNightMode} />
@@ -323,7 +280,8 @@ export default function Scene({ isNightMode, searchQuery, onSelectContainer, sel
             isHeatmapMode={isHeatmapMode}
           />
 
-          <PortBuildings />
+          {/* 🚀 [DIRECT PROP LOCK] මෙතනින් ස්ටේට් එක කෙලින්ම පාස් කරා මචන් */}
+          <PortBuildings isNightMode={isNightMode} />
           
           {!isHeatmapMode && <HeatmapLayer />}
           
@@ -336,7 +294,18 @@ export default function Scene({ isNightMode, searchQuery, onSelectContainer, sel
 
         </Suspense>
 
-        <OrbitControls ref={controlsRef} enableDamping dampingFactor={0.04} maxPolarAngle={Math.PI / 2 - 0.02} />
+        <OrbitControls 
+          ref={controlsRef} 
+          enableDamping 
+          dampingFactor={0.04} 
+          maxPolarAngle={Math.PI / 2 - 0.02} 
+          autoRotate={!selectedContainer} 
+          autoRotateSpeed={0.2} 
+          
+          enablePan={false}   
+          minDistance={40}    
+          maxDistance={260}   
+        />
       </Canvas>
     </div>
   );

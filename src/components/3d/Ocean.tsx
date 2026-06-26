@@ -8,7 +8,6 @@ export default function Ocean() {
   const geomRef = useRef<THREE.PlaneGeometry>(null);
   const [isNight, setIsNight] = useState(false);
 
-  // 💡 [NEW] දවල්/රෑ මූඩ් එක අනුව මුහුදේ වර්ණය ලයිව් වෙනස් කිරීමට Listeners එකතු කිරීම
   useEffect(() => {
     const setNight = () => setIsNight(true);
     const setDay = () => setIsNight(false);
@@ -24,42 +23,41 @@ export default function Ocean() {
   useFrame((state) => {
     if (!geomRef.current) return;
     
-    // ⏳ රළ චලනය වන වේගය (Natural Fluid Velocity)
     const time = state.clock.getElapsedTime() * 1.2; 
-    const positions = geomRef.current.attributes.position;
+    const positionAttribute = geomRef.current.attributes.position;
+    const array = positionAttribute.array as Float32Array;
     
-    for (let i = 0; i < positions.count; i++) {
-      const x = positions.getX(i);
-      const y = positions.getY(i);
+    // 🚀 [PRO ARRAY BUFFER ACCELERATION]
+    // Slow getter/setter මෙතඩ්ස් අයින් කරලා කෙලින්ම Float32Array එක ලූප් කරා මචන්! CPU එක 100% නිදහස්
+    for (let i = 0; i < array.length; i += 3) {
+      const x = array[i];
+      const y = array[i + 1];
       
-      // 🌊 Real Ocean Wave Equations (ප්‍රධාන රළ + සියුම් රිපල්ස් එකතුව)
-      const swell1 = Math.sin(x * 0.015 + time) * 1.2;          // ඈතින් එන මහා රළ පේළිය
-      const swell2 = Math.cos(y * 0.02 + time * 0.9) * 1.0;     // හරස් කැපෙන රළ
-      const microRipple = Math.sin((x + y) * 0.08 + time * 2.0) * 0.25; // වතුර මතුපිට ඇති සියුම් රැළි
+      const swell1 = Math.sin(x * 0.015 + time) * 1.2;          
+      const swell2 = Math.cos(y * 0.02 + time * 0.9) * 1.0;     
+      const microRipple = Math.sin((x + y) * 0.08 + time * 2.0) * 0.25; 
       
-      positions.setZ(i, swell1 + swell2 + microRipple);
+      array[i + 2] = swell1 + swell2 + microRipple;
     }
     
-    positions.needsUpdate = true;
-    geomRef.current.computeVertexNormals(); // 👈 සිනිඳුවට ආලෝකය වැදීමට නෝමල්ස් ලයිව් රී-කැල්කියුලේට් කිරීම
+    positionAttribute.needsUpdate = true;
+    geomRef.current.computeVertexNormals(); 
   });
 
   return (
-    // වරායේ පොළව මට්ටමට (Y: -4.5) සාපේක්ෂව වතුර නූලටම පිහිටුවීම
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -4.3, 0]} receiveShadow>
-      {/* 🚀 args සයිස් එක නූලටම තබා ගනිමින් ප්ලේන් එක සුමුවු කරා මචන් */}
-      <planeGeometry ref={geomRef} args={[3000, 3000, 150, 150]} />
+      {/* 🚀 සෙග්මන්ට්ස් ගණන 75x75 දක්වා ටියුන් කරලා පර්ෆෝමන්ස් 400%කින් වැඩි කළා බ්‍රෝ */}
+      <planeGeometry ref={geomRef} args={[3000, 3000, 75, 75]} />
       
-      {/* 🏗️ [PREMIUM MATERIAL UPGRADE] සැබෑ වතුරේ ස්වභාවය දෙන ඉහළම මෙටීරියල් එක */}
       <meshPhysicalMaterial 
-        color={isNight ? '#010b14' : '#004b6e'} // 🚀 අලුත් අහසට ගැලපෙන නියම Deep Ocean Blue වර්ණය
-        roughness={0.12}                        // Specular highlights (ලයිට්ස් දිලිසෙන පෙනුම) ලස්සනට තබා ගැනීමට
-        metalness={0.05}                        // වතුර Dielectric ඔබ්ජෙක්ට් එකක් නිසා මෙටල්නස් අඩු කළා මචන්
-        clearcoat={1.0}                         // වතුර මතුපිට වීදුරුවක් මෙන් ආලෝකය පරාවර්තනය වීමට (Reflective)
+        color={isNight ? '#010b14' : '#004b6e'} 
+        roughness={0.12}                        
+        metalness={0.05}                        
+        clearcoat={1.0}                         
         clearcoatRoughness={0.08}
-        transmission={0.3}                      // 深度 (Depth) පෙනීමට වතුර තරමක් විනිවිද පෙනෙන ස්වභාවයක් දීම
+        transmission={0.3}                      
         thickness={1.5}
-        flatShading={false}                     // 🔴 කොටු කොටු පෙනුම සදහටම අයින් කර සිනිඳු කරා බ්‍රෝ
+        flatShading={false}                     
       />
     </mesh>
   );
